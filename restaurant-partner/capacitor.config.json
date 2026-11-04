@@ -1,0 +1,9 @@
+{
+  "appId": "com.feedo.restaurantpartner",
+  "appName": "FEEDO Partner",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  }
+}

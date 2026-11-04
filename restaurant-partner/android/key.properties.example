@@ -1,0 +1,8 @@
+# Keystore configuration template for FEEDO Restaurant Partner Release
+# Copy this file to `android/key.properties` and fill in your secure release keystore details.
+# DO NOT commit the actual `key.properties` or `.jks` file to source control.
+
+storePassword=YOUR_KEYSTORE_PASSWORD
+keyPassword=YOUR_KEY_PASSWORD
+keyAlias=feedo_release_key
+storeFile=../feedo-release.jks
