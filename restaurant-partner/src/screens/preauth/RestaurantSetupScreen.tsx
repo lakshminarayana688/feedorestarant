@@ -11,13 +11,33 @@ import {
   ShieldCheck,
   Bike,
   Sparkles,
+  MapPin,
+  Navigation,
 } from 'lucide-react';
+import { getCurrentDeviceGpsCoordinates } from '../../utils/geolocation';
 
 export const RestaurantSetupScreen: React.FC = () => {
   const { restaurant, updateRestaurant, completeSetup, showToast } = useApp();
 
   const [hours, setHours] = useState<OpeningHour[]>(restaurant.openingHours);
   const [description, setDescription] = useState(restaurant.description);
+  const [storeLat, setStoreLat] = useState<number>(restaurant.latitude || 12.9352);
+  const [storeLng, setStoreLng] = useState<number>(restaurant.longitude || 77.6245);
+  const [isDetectingGps, setIsDetectingGps] = useState(false);
+
+  const handleDetectGps = async () => {
+    setIsDetectingGps(true);
+    try {
+      const coords = await getCurrentDeviceGpsCoordinates();
+      setStoreLat(coords.latitude);
+      setStoreLng(coords.longitude);
+      showToast(`Store GPS location verified: ${coords.latitude}, ${coords.longitude}`, 'success');
+    } catch (err: any) {
+      showToast(err.message || 'Failed to detect GPS location', 'error');
+    } finally {
+      setIsDetectingGps(false);
+    }
+  };
 
   const toggleDay = (dayIndex: number) => {
     const updated = [...hours];
@@ -30,6 +50,8 @@ export const RestaurantSetupScreen: React.FC = () => {
       openingHours: hours,
       description,
       isOnline: true,
+      latitude: storeLat,
+      longitude: storeLng,
     });
     completeSetup();
   };
@@ -156,19 +178,35 @@ export const RestaurantSetupScreen: React.FC = () => {
 
           {/* SECTION 3: DELIVERY SETTINGS */}
           <div className="space-y-3 pt-6 border-t border-slate-100">
-            <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-              <Bike className="w-4 h-4 text-feedo-500" />
-              <span>3. Delivery & Dispatch Parameters</span>
-            </h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                <Bike className="w-4 h-4 text-feedo-500" />
+                <span>3. FEEDO 20 KM Service Delivery Radius</span>
+              </h3>
+              <button
+                type="button"
+                onClick={handleDetectGps}
+                disabled={isDetectingGps}
+                className="px-3 py-1 bg-feedo-50 hover:bg-feedo-100 text-feedo-700 font-bold text-xs rounded-xl border border-feedo-200 flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
+              >
+                <Navigation className={`w-3.5 h-3.5 ${isDetectingGps ? 'animate-spin' : ''}`} />
+                <span>{isDetectingGps ? 'Verifying...' : 'Verify Device GPS'}</span>
+              </button>
+            </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
               <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200">
-                <span className="font-bold text-slate-700 block mb-1">Standard Prep Time</span>
-                <span className="text-slate-500">Default 15-20 minutes kitchen prep</span>
+                <span className="font-bold text-slate-700 block mb-1">Service Radius</span>
+                <span className="text-emerald-700 font-semibold flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                  Exact 20 KM delivery coverage active
+                </span>
               </div>
               <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200">
-                <span className="font-bold text-slate-700 block mb-1">Delivery Partner Radius</span>
-                <span className="text-slate-500">Up to 8.5 km radius around Koramangala</span>
+                <span className="font-bold text-slate-700 block mb-1">Store GPS Coordinates</span>
+                <span className="font-mono text-slate-600">
+                  {storeLat.toFixed(4)}° N, {storeLng.toFixed(4)}° E
+                </span>
               </div>
             </div>
           </div>

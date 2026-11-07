@@ -13,7 +13,7 @@ serve(async (req: Request) => {
 
   try {
     const body = await req.json();
-    const { restaurant_id, is_online, auto_accept_orders, new_order_sound, cuisines, address, pincode } = body;
+    const { restaurant_id, is_online, auto_accept_orders, new_order_sound, cuisines, address, pincode, latitude, longitude } = body;
 
     if (!restaurant_id) {
       return createErrorResponse('Missing required restaurant_id', 400);
@@ -57,6 +57,12 @@ serve(async (req: Request) => {
     if (Array.isArray(cuisines)) updates.cuisines = cuisines;
     if (address) updates.address = address.trim();
     if (pincode) updates.pincode = pincode.trim();
+    if (typeof latitude === 'number' || (typeof latitude === 'string' && !isNaN(Number(latitude)))) {
+      updates.latitude = Number(latitude);
+    }
+    if (typeof longitude === 'number' || (typeof longitude === 'string' && !isNaN(Number(longitude)))) {
+      updates.longitude = Number(longitude);
+    }
 
     const { data: updatedRestaurant, error: updateErr } = await adminClient
       .from('restaurants')

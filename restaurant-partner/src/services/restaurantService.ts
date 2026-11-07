@@ -43,6 +43,8 @@ export const restaurantService = {
         state: data.state || 'Karnataka',
         pincode: data.pincode || '560034',
         landmark: '',
+        latitude: data.latitude != null ? Number(data.latitude) : 12.9352,
+        longitude: data.longitude != null ? Number(data.longitude) : 77.6245,
         fssaiNumber: '21223004000891',
         panNumber: 'AABCL9921D',
         bankAccount: '•••• •••• •••• 9921',
@@ -80,6 +82,8 @@ export const restaurantService = {
     city?: string;
     state?: string;
     pincode: string;
+    latitude?: number;
+    longitude?: number;
   }): Promise<ApiResponse<any>> {
     if (isDemoMode()) {
       return createSuccessResponse({
@@ -109,6 +113,8 @@ export const restaurantService = {
       cuisines?: string[];
       address?: string;
       pincode?: string;
+      latitude?: number;
+      longitude?: number;
     }
   ): Promise<ApiResponse<any>> {
     if (isDemoMode()) {

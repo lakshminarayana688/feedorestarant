@@ -60,6 +60,8 @@ export interface RestaurantDetails {
   state: string;
   pincode: string;
   landmark: string;
+  latitude?: number;
+  longitude?: number;
   
   fssaiNumber: string;
   panNumber: string;

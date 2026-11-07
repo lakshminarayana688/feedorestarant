@@ -60,6 +60,8 @@ export const initialRestaurantDetails: RestaurantDetails = {
   state: 'Karnataka',
   pincode: '560034',
   landmark: 'Opposite Sony World Signal',
+  latitude: 12.9352,
+  longitude: 77.6245,
   
   fssaiNumber: '21223004000891',
   panNumber: 'AABCL9921D',

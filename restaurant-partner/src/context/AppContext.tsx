@@ -34,6 +34,7 @@ import {
 } from '../services';
 import { getSupabaseClient, isSupabaseConfigured } from '../utils/supabase';
 import { generateUniquePickupCode } from '../utils/orderUtils';
+import { broadcastRestaurantUpdate } from '../utils/geolocation';
 
 
 export type ScreenName =
@@ -273,7 +274,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [currentScreen, setCurrentScreen] = useState<ScreenName>('splash');
   
   // Restaurant data
-  const [restaurant, setRestaurant] = useState<RestaurantDetails>(initialRestaurantDetails);
+  const [restaurant, setRestaurant] = useState<RestaurantDetails>(() => {
+    try {
+      const saved = localStorage.getItem('feedo_partner_restaurant');
+      if (saved) {
+        return { ...initialRestaurantDetails, ...JSON.parse(saved) };
+      }
+    } catch (e) {
+      // fallback
+    }
+    return initialRestaurantDetails;
+  });
+
+  // Keep partner restaurant updates synchronized across apps & tabs
+  useEffect(() => {
+    broadcastRestaurantUpdate(restaurant);
+  }, [restaurant]);
   const [documents, setDocuments] = useState<VerificationDocument[]>(initialDocuments);
 
   // Restore persisted documents from Supabase Storage / LocalStorage

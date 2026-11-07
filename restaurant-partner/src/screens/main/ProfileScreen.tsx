@@ -19,7 +19,9 @@ import {
   Award,
   ArrowLeft,
   LogOut,
+  Navigation,
 } from 'lucide-react';
+import { getCurrentDeviceGpsCoordinates } from '../../utils/geolocation';
 
 export const ProfileScreen: React.FC = () => {
   const { restaurant, updateRestaurant, showToast, setScreen, setIsSignOutModalOpen } = useApp();
@@ -34,9 +36,28 @@ export const ProfileScreen: React.FC = () => {
     instagram: '@luckybiryaniofficial',
     facebook: 'facebook.com/luckyfamilyrestaurant',
     twitter: '@lucky_blr',
-    lat: '12.9352',
-    lng: '77.6245',
+    lat: restaurant.latitude != null ? String(restaurant.latitude) : '12.9352',
+    lng: restaurant.longitude != null ? String(restaurant.longitude) : '77.6245',
   });
+
+  const [isDetectingGps, setIsDetectingGps] = useState(false);
+
+  const handleDetectGps = async () => {
+    setIsDetectingGps(true);
+    try {
+      const coords = await getCurrentDeviceGpsCoordinates();
+      setForm((prev) => ({
+        ...prev,
+        lat: String(coords.latitude),
+        lng: String(coords.longitude),
+      }));
+      showToast(`Device GPS captured: ${coords.latitude}, ${coords.longitude}`, 'success');
+    } catch (err: any) {
+      showToast(err.message || 'Failed to capture device GPS location', 'error');
+    } finally {
+      setIsDetectingGps(false);
+    }
+  };
 
   const [cuisines, setCuisines] = useState(restaurant.cuisines);
   const [certifications, setCertifications] = useState(['FSSAI Food Hygiene 5★', 'Halal Certified', 'Vegan Friendly Options']);
@@ -51,6 +72,25 @@ export const ProfileScreen: React.FC = () => {
 
   const handleSaveChanges = (e: React.FormEvent) => {
     e.preventDefault();
+
+    const parsedLat = parseFloat(form.lat);
+    const parsedLng = parseFloat(form.lng);
+
+    if (
+      isNaN(parsedLat) ||
+      isNaN(parsedLng) ||
+      parsedLat < -90 ||
+      parsedLat > 90 ||
+      parsedLng < -180 ||
+      parsedLng > 180
+    ) {
+      showToast(
+        'Please enter valid GPS coordinates (Latitude: -90 to 90, Longitude: -180 to 180)',
+        'error'
+      );
+      return;
+    }
+
     updateRestaurant({
       restaurantName: form.name,
       description: form.bio,
@@ -59,8 +99,10 @@ export const ProfileScreen: React.FC = () => {
       ownerEmail: form.email,
       cuisines,
       openingHours: hours,
+      latitude: parsedLat,
+      longitude: parsedLng,
     });
-    showToast('Restaurant profile details saved successfully!', 'success');
+    showToast('Restaurant profile & 20 KM service location saved successfully!', 'success');
   };
 
   const handleAddPhoto = () => {
@@ -349,10 +391,28 @@ export const ProfileScreen: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Location */}
           <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-2xs space-y-4">
-            <h3 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3 flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-feedo-500" />
-              <span>Location & Coordinates</span>
-            </h3>
+            <div className="border-b border-slate-100 pb-3 flex items-center justify-between">
+              <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <MapPin className="w-4 h-4 text-feedo-500" />
+                <span>Location & Coordinates (20 KM Service Radius)</span>
+              </h3>
+              <button
+                type="button"
+                onClick={handleDetectGps}
+                disabled={isDetectingGps}
+                className="px-3 py-1.5 bg-feedo-50 hover:bg-feedo-100 text-feedo-700 font-bold text-xs rounded-xl border border-feedo-200 flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
+              >
+                <Navigation className={`w-3.5 h-3.5 ${isDetectingGps ? 'animate-spin' : ''}`} />
+                <span>{isDetectingGps ? 'Locating...' : 'Use Device GPS'}</span>
+              </button>
+            </div>
+
+            <div className="p-3 bg-feedo-50/60 border border-feedo-200/80 rounded-2xl text-xs text-feedo-900 flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+              <span>
+                <strong>20 KM Service Radius Active:</strong> Customers within 20 KM of this location can discover and order from your store.
+              </span>
+            </div>
 
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
@@ -368,20 +428,22 @@ export const ProfileScreen: React.FC = () => {
 
             <div className="grid grid-cols-2 gap-3 text-xs">
               <div>
-                <label className="block text-slate-400 uppercase text-[10px] mb-1">Latitude</label>
+                <label className="block text-slate-400 uppercase text-[10px] mb-1">Latitude (°N)</label>
                 <input
                   type="text"
                   value={form.lat}
                   onChange={(e) => setForm({ ...form, lat: e.target.value })}
+                  placeholder="e.g. 12.9352"
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-mono text-xs"
                 />
               </div>
               <div>
-                <label className="block text-slate-400 uppercase text-[10px] mb-1">Longitude</label>
+                <label className="block text-slate-400 uppercase text-[10px] mb-1">Longitude (°E)</label>
                 <input
                   type="text"
                   value={form.lng}
                   onChange={(e) => setForm({ ...form, lng: e.target.value })}
+                  placeholder="e.g. 77.6245"
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-mono text-xs"
                 />
               </div>
